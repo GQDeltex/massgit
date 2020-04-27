@@ -9,7 +9,8 @@ import logging
 
 class UpdateGit(object):
     """
-    Main Class of the Git Updater. Houses all the functions, can also be used to import into other projects.
+    Main Class of the Git Updater.
+    Houses all the functions, can also be used to import into other projects.
 
     @author GQDeltex
     """
