@@ -2,10 +2,80 @@
 """
 Python Module to Update all git repositories in a specific Folder (e.g. ./)
 """
-from subprocess import call
+from subprocess import Popen, PIPE
 import argparse
 import os
 import logging
+
+class Git(object):
+    """
+    Wrapper around the command line git tool
+    Using subprocess.Popen
+
+    @author GQDeltex
+    """
+    def __init__(self):
+        """
+        Init the Git Class and check if git is installed.
+        
+        @param self The parent Class
+        """
+        self.log = logging.getLogger(__name__)
+    
+    def status(self, folder):
+        """
+        Execute 'git status' on a given folder.
+
+
+        @param self The parent class
+        @param folder The folder git repo folder
+
+        @return STDOUT of the process
+        """
+        self.log.debug("Calling git status on {}".format(folder))
+        process = Popen(['git', 'status'], stdout=PIPE, stderr=PIPE, cwd=folder)
+        stdout, stderr = process.communicate()
+        if stderr:
+            self.log.error(stderr)
+            return ""
+        self.log.debug(stdout)
+        return stdout
+    
+    def pull(self, folder):
+        """
+        Execute 'git pull' on a given folder.
+
+        @param self The parent class
+        @param folder The folder git repo folder
+
+        @return STDOUT of the process
+        """
+        self.log.debug("Calling git pull on {}".format(folder))
+        process = Popen(['git', 'pull'], stdout=PIPE, stderr=PIPE, cwd=folder)
+        stdout, stderr = process.communicate()
+        if stderr:
+            self.log.error(stderr)
+            return ""
+        self.log.debug(stdout)
+        return stdout
+    
+    def push(self, folder):
+        """
+        Execute 'git push' on a given folder.
+
+        @param self The parent class
+        @param folder The folder git repo folder
+
+        @return STDOUT of the process
+        """
+        self.log.debug("Calling git push on {}".format(folder))
+        process = Popen(['git', 'push'], stdout=PIPE, stderr=PIPE, cwd=folder)
+        stdout, stderr = process.communicate()
+        if stderr:
+            self.log.error(stderr)
+            return ""
+        self.log.debug(stdout)
+        return stdout
 
 class UpdateGit(object):
     """
@@ -34,9 +104,6 @@ class UpdateGit(object):
 
         @param self The parent class
         """
-        if not self.base_dir:
-            self.log.error('No Path specified at startup')
-            exit()
         self.log.info("Discovering Git Repositories")
         all_available = os.listdir(self.base_dir)
         self.bad_folders = []
@@ -47,11 +114,13 @@ class UpdateGit(object):
                 else:
                     self.bad_folders.append(folder)
         if self.bad_folders:
-            self.log.warning("Found Folders that are not git Repos: %s", str(self.bad_folders))
+            self.log.info("Found Folders that are not git Repos:")
+            for folder in self.bad_folders:
+                self.log.info(" -> {}".format(str(folder)))
         if len(self.directories) < 1:
-            self.log.warning("Found 0 Repositories in %s", self.base_dir)
+            self.log.warning("Found 0 Repositories in {}".format(self.base_dir))
             exit()
-        self.log.info("Done. Found %d Repositories", len(self.directories))
+        self.log.info("Done. Found {} Repositories".,format(len(self.directories)))
 
     def status(self):
         """
