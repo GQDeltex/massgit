@@ -10,6 +10,13 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  RunPylint:
+    runs-on: ubuntu-latest
+    name: Run Pylint check
+    steps:
+      - name: GitHub Action for pylint
+        uses: cclauss/GitHub-Action-for-pylint@0.7.0
+
   CreateMarkdownDocs:
     runs-on: ubuntu-latest
     name: Create Markdown Documentation Files
@@ -21,19 +28,14 @@ jobs:
         uses: peter-evans/create-pull-request@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-  CreateAutomaticRequirements:
-    runs-on: ubuntu-latest
-    name: Create requirements.txt from file
-    steps:
-      - uses: actions/checkout@v2
-      - name: Create requirements.txt
-        uses: ryan-rozario/pipreqs-action-cpy@master
-  RunPylint:
-    runs-on: ubuntu-latest
-    name: Run Pylint check
-    steps:
-      - name: GitHub Action for pylint
-        uses: cclauss/GitHub-Action-for-pylint@0.7.0
+
+#  CreateAutomaticRequirements:
+#    runs-on: ubuntu-latest
+#    name: Create requirements.txt from file
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Create requirements.txt
+#        uses: ryan-rozario/pipreqs-action-cpy@master
 
 
 
