@@ -9,11 +9,17 @@ import logging
 
 class UpdateGit(object):
     """
-    Class to update all git repositories in a specific Folder.
+    Main Class of the Git Updater. Houses all the functions, can also be used to import into other projects.
+
+    @author GQDeltex
     """
     def __init__(self, directory="./"):
         """
-        Initializes the base_dir (defaults to \'./\' ) and sets up logging
+        Initializes the Class and sets up some basic Variables
+
+
+        @param self The parent class
+        @param directory The directory in which to search for git repositories
         """
         # Get the Specified Folder and resolve ~ Paths
         self.base_dir = os.path.abspath(os.path.expanduser(directory))
@@ -24,6 +30,8 @@ class UpdateGit(object):
     def discover(self):
         """
         Discovers the Repositories in the specified Folder (searches for .git folders)
+
+        @param self The parent class
         """
         if not self.base_dir:
             self.log.error('No Path specified at startup')
@@ -47,6 +55,8 @@ class UpdateGit(object):
     def status(self):
         """
         Runs 'git status' for all the found repositories
+
+        @param self The parent class
         """
         errors = 0
         if not self.directories:
@@ -76,6 +86,8 @@ class UpdateGit(object):
     def pull(self):
         """
         Runs 'git pull' for all the found repositories
+
+        @param self The parent class
         """
         errors = 0
         if not self.directories:
@@ -105,6 +117,8 @@ class UpdateGit(object):
     def push(self):
         """
         Runs 'git push' for all the found repositories
+
+        @param self The parent class
         """
         errors = 0
         if not self.directories:
@@ -134,6 +148,8 @@ class UpdateGit(object):
     def update(self):
         """
         Runs 'git pull' and 'git push' for all the found repositories
+
+        @param self The parent class
         """
         self.log.info("Updating all Repositories")
         self.pull()
