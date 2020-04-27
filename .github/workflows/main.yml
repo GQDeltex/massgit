@@ -25,8 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Create requirements.txt from file
     steps:
+      - uses: actions/checkout@v2
       - name: Create requirements.txt
         uses: ryan-rozario/pipreqs-action-cpy@master
+      - name: Open docs update PR
+        uses: peter-evans/create-pull-request@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
   RunPylint:
     runs-on: ubuntu-latest
     name: Run Pylint check
