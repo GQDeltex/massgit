@@ -18,6 +18,7 @@ class UpdateGit(object):
         # Get the Specified Folder and resolve ~ Paths
         self.base_dir = os.path.abspath(os.path.expanduser(directory))
         self.directories = []
+        self.bad_folders = []
         self.log = logging.getLogger(__name__)
 
     def discover(self):
