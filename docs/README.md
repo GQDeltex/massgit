@@ -2,7 +2,8 @@
 
 ## Classes
 
-**[UpdateGit](UpdateGit.md)**: Class to update all git repositories in a specific Folder. 
+**[UpdateGit](UpdateGit.md)**: Main Class of the Git Updater. Houses all the functions, can also be used to import into other projects.   
+
 
 
 ## Functions

@@ -1,7 +1,8 @@
 # UpdateGit
+Authors: **GQDeltex**
 
+Main Class of the Git Updater. Houses all the functions, can also be used to import into other projects.   
 
-Class to update all git repositories in a specific Folder. 
 
 ## Methods
 
@@ -9,13 +10,15 @@ Class to update all git repositories in a specific Folder.
 ### __init__
 
 
-Initializes the base_dir (defaults to './' ) and sets up logging 
+Initializes the Class and sets up some basic Variables   
+  
+
 
 #### Parameters
 name | description | default
 --- | --- | ---
-self |  | 
-directory |  | "./"
+self | The parent class | 
+directory | The directory in which to search for git repositories | "./"
 
 
 
@@ -24,12 +27,13 @@ directory |  | "./"
 ### discover
 
 
-Discovers the Repositories in the specified Folder (searches for .git folders) 
+Discovers the Repositories in the specified Folder (searches for .git folders)   
+
 
 #### Parameters
 name | description | default
 --- | --- | ---
-self |  | 
+self | The parent class | 
 
 
 
@@ -38,12 +42,13 @@ self |  |
 ### status
 
 
-Runs 'git status' for all the found repositories 
+Runs 'git status' for all the found repositories   
+
 
 #### Parameters
 name | description | default
 --- | --- | ---
-self |  | 
+self | The parent class | 
 
 
 
@@ -52,12 +57,13 @@ self |  |
 ### pull
 
 
-Runs 'git pull' for all the found repositories 
+Runs 'git pull' for all the found repositories   
+
 
 #### Parameters
 name | description | default
 --- | --- | ---
-self |  | 
+self | The parent class | 
 
 
 
@@ -66,12 +72,13 @@ self |  |
 ### push
 
 
-Runs 'git push' for all the found repositories 
+Runs 'git push' for all the found repositories   
+
 
 #### Parameters
 name | description | default
 --- | --- | ---
-self |  | 
+self | The parent class | 
 
 
 
@@ -80,12 +87,13 @@ self |  |
 ### update
 
 
-Runs 'git pull' and 'git push' for all the found repositories 
+Runs 'git pull' and 'git push' for all the found repositories   
+
 
 #### Parameters
 name | description | default
 --- | --- | ---
-self |  | 
+self | The parent class | 
 
 
 
