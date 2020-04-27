@@ -187,25 +187,18 @@ class UpdateGit(object):
             except git.exc.GitCommandError as e:
                 status = "Error while Pushing Repo:\n{}".format(e)
             index += 1
-            """
             if not status:
                 if self.emojis:
-                    icon = "✔️ "
+                    icon = "📤 "
                 else:
                     icon = "OK"
                 message="Already up to date"
-            elif "No remote set up" in status or "Error while Pushing Repo" in status:
+            else:
                 if self.emojis:
                     icon = "❌ "
                 else:
                     icon = "ERR"
                 message = "{}".format(status)
-            else:
-                if self.emojis:
-                    icon = "📤 "
-                else:
-                    icon = "PULL"
-                message="Pushing Repo"
             status = "[{done:02d}/{all:02d}] {repo} {icon} -> {message}".format(
                 done=index,
                 all=len(self.directories),
@@ -213,7 +206,6 @@ class UpdateGit(object):
                 repo=folder,
                 message=message
             )
-            """
             self.log.info("%s", status.strip())
         if errors > 0:
             self.log.warning("Encountered %d errors while performing task", errors)
