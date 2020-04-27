@@ -192,7 +192,7 @@ class UpdateGit(object):
                     icon = "📤 "
                 else:
                     icon = "OK"
-                message="Already up to date"
+                message="Up to date"
             else:
                 if self.emojis:
                     icon = "❌ "
