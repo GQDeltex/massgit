@@ -18,8 +18,9 @@ jobs:
       uses: jbheard/markdown-docs@v0.1
     - name: Automatic requirement.txt for Python Projects
       uses: ryan-rozario/pipreqs-action@v1.0.1
-    - name: pylint3-action
-      uses: LakshitF/pylint3-action@v2
+    - name: GitHub Action for pylint
+      uses: cclauss/GitHub-Action-for-pylint@0.7.0
+
 
 
      
