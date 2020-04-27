@@ -32,6 +32,8 @@ optional arguments:
   --update, -u  Update (Pull then Push) all Repositories
 ```
 
+For more information regarding the used Modules, refer to the [Documentation](/docs/)
+
 ## Tips & Tricks
 
 There are multiple ways to make execution a lot easier:
