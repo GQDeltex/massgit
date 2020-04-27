@@ -2,80 +2,10 @@
 """
 Python Module to Update all git repositories in a specific Folder (e.g. ./)
 """
-from subprocess import Popen, PIPE
 import argparse
 import os
 import logging
-
-class Git(object):
-    """
-    Wrapper around the command line git tool
-    Using subprocess.Popen
-
-    @author GQDeltex
-    """
-    def __init__(self):
-        """
-        Init the Git Class and check if git is installed.
-        
-        @param self The parent Class
-        """
-        self.log = logging.getLogger(__name__)
-    
-    def status(self, folder):
-        """
-        Execute 'git status' on a given folder.
-
-
-        @param self The parent class
-        @param folder The folder git repo folder
-
-        @return STDOUT of the process
-        """
-        self.log.debug("Calling git status on {}".format(folder))
-        process = Popen(['git', 'status'], stdout=PIPE, stderr=PIPE, cwd=folder)
-        stdout, stderr = process.communicate()
-        if stderr:
-            self.log.error(stderr)
-            return ""
-        self.log.debug(stdout)
-        return stdout
-    
-    def pull(self, folder):
-        """
-        Execute 'git pull' on a given folder.
-
-        @param self The parent class
-        @param folder The folder git repo folder
-
-        @return STDOUT of the process
-        """
-        self.log.debug("Calling git pull on {}".format(folder))
-        process = Popen(['git', 'pull'], stdout=PIPE, stderr=PIPE, cwd=folder)
-        stdout, stderr = process.communicate()
-        if stderr:
-            self.log.error(stderr)
-            return ""
-        self.log.debug(stdout)
-        return stdout
-    
-    def push(self, folder):
-        """
-        Execute 'git push' on a given folder.
-
-        @param self The parent class
-        @param folder The folder git repo folder
-
-        @return STDOUT of the process
-        """
-        self.log.debug("Calling git push on {}".format(folder))
-        process = Popen(['git', 'push'], stdout=PIPE, stderr=PIPE, cwd=folder)
-        stdout, stderr = process.communicate()
-        if stderr:
-            self.log.error(stderr)
-            return ""
-        self.log.debug(stdout)
-        return stdout
+import git
 
 class UpdateGit(object):
     """
@@ -84,7 +14,7 @@ class UpdateGit(object):
 
     @author GQDeltex
     """
-    def __init__(self, directory="./"):
+    def __init__(self, directory="./", emojis=True):
         """
         Initializes the Class and sets up some basic Variables
 
@@ -94,9 +24,10 @@ class UpdateGit(object):
         """
         # Get the Specified Folder and resolve ~ Paths
         self.base_dir = os.path.abspath(os.path.expanduser(directory))
-        self.directories = []
+        self.directories = {}
         self.bad_folders = []
         self.log = logging.getLogger(__name__)
+        self.emojis = emojis
 
     def discover(self):
         """
@@ -110,17 +41,19 @@ class UpdateGit(object):
         for folder in all_available:
             if os.path.isdir(os.path.join(self.base_dir, folder)):
                 if os.path.isdir(os.path.join(self.base_dir, folder, ".git")):
-                    self.directories.append(folder)
+                    repo = git.Repo(os.path.join(self.base_dir, folder))
+                    self.directories[folder] = repo
                 else:
                     self.bad_folders.append(folder)
         if self.bad_folders:
             self.log.info("Found Folders that are not git Repos:")
-            for folder in self.bad_folders:
-                self.log.info(" -> {}".format(str(folder)))
+            for index in range(len(self.bad_folders)):
+                folder = self.bad_folders[index]
+                self.log.info(" %02d -> %s", index, str(folder))
         if len(self.directories) < 1:
-            self.log.warning("Found 0 Repositories in {}".format(self.base_dir))
+            self.log.warning("Found 0 Repositories in %s", self.base_dir)
             exit()
-        self.log.info("Done. Found {} Repositories".,format(len(self.directories)))
+        self.log.info("Done. Found %d Repositories", len(self.directories))
 
     def status(self):
         """
@@ -129,23 +62,41 @@ class UpdateGit(object):
         @param self The parent class
         """
         errors = 0
+        index = 0
         if not self.directories:
             self.log.error("Please Discover the Repositories first using the discover function")
             return
         self.log.info("Checking Status")
-        for i in range(len(self.directories)):
-            folder = self.directories[i]
-            self.log.info(
-                "[%d/%d] Checking dir: %s",
-                (i+1),
-                len(self.directories),
-                os.path.join(self.base_dir, folder)
-            )
-            status = call(["git", "status"], cwd=os.path.join(self.base_dir, folder))
-            if status != 0:
-                self.log.error("Error while checking status. Please check console output")
+        for folder in self.directories:
+            repo = self.directories[folder]
+            status = repo.git.status()
+            index += 1
+            if not status:
                 errors += 1
-        if errors != 0:
+                continue
+            branch = status.split("\n")[0].replace("On branch ", "").strip()
+            if "Your branch is up to date with" in status:
+                if self.emojis:
+                    icon = "✔️ "
+                else:
+                    icon = "OK"
+                message="Everything up to date"
+            else:
+                if self.emojis:
+                    icon = "❌ "
+                else:
+                    icon = "ERR"
+                message = "\n{}".format(status)
+            status = "[{done:02d}/{all:02d}] {repo}:{branch} {icon} -> {message}".format(
+                done=index,
+                all=len(self.directories),
+                icon=icon,
+                repo=folder,
+                branch=branch,
+                message=message
+            )
+            self.log.info("%s", status.strip())
+        if errors > 0:
             self.log.warning("Encountered %d errors while performing task", errors)
         self.log.info(
             "Checked [%d/%d] Repositories",
@@ -160,23 +111,53 @@ class UpdateGit(object):
         @param self The parent class
         """
         errors = 0
+        index = 0
         if not self.directories:
             self.log.error("Please Discover the Repositories first using the discover function")
             return
         self.log.info("Pulling Repositories")
-        for i in range(len(self.directories)):
-            folder = self.directories[i]
-            self.log.info(
-                "[%d/%d] Pulling dir: %s",
-                (i+1),
-                len(self.directories),
-                os.path.join(self.base_dir, folder)
-            )
-            status = call(["git", "pull"], cwd=os.path.join(self.base_dir, folder))
-            if status != 0:
-                self.log.error("Error while pulling. Please check console output")
+        for folder in self.directories:
+            repo = self.directories[folder]
+            try:
+                if repo.remotes:
+                    status = repo.git.pull()
+                else:
+                    self.log.warning("No remote set up")
+                    status = "No remote set up"
+            except git.exc.GitCommandError as e:
+                self.log.error("Error while Pulling Repo:\n%s", e)
+                status = "Error while Pulling Repo:\n{}".format(e)
+            index += 1
+            if not status:
                 errors += 1
-        if errors != 0:
+                continue
+            if "Already up to date." in status:
+                if self.emojis:
+                    icon = "✔️ "
+                else:
+                    icon = "OK"
+                message="Already up to date"
+            elif "No remote set up" in status or "Error while Pulling Repo" in status:
+                if self.emojis:
+                    icon = "❌ "
+                else:
+                    icon = "ERR"
+                message = "{}".format(status)
+            else:
+                if self.emojis:
+                    icon = "📥 "
+                else:
+                    icon = "PULL"
+                message="Pulling Repo"
+            status = "[{done:02d}/{all:02d}] {repo} {icon} -> {message}".format(
+                done=index,
+                all=len(self.directories),
+                icon=icon,
+                repo=folder,
+                message=message
+            )
+            self.log.info("%s", status.strip())
+        if errors > 0:
             self.log.warning("Encountered %d errors while performing task", errors)
         self.log.info(
             "Pulled [%d/%d] Repositories in the Folder",
@@ -191,23 +172,50 @@ class UpdateGit(object):
         @param self The parent class
         """
         errors = 0
+        index = 0
         if not self.directories:
             self.log.error("Please Discover the Repositories first using the discover function")
             return
         self.log.info("Pushing Repositories")
-        for i in range(len(self.directories)):
-            folder = self.directories[i]
-            self.log.info(
-                "[%d/%d] Pushing dir: %s",
-                (i+1),
-                len(self.directories),
-                os.path.join(self.base_dir, folder)
+        for folder in self.directories:
+            repo = self.directories[folder]
+            try:
+                if repo.remotes:
+                    status = repo.git.push()
+                else:
+                    status = "No remote set up"
+            except git.exc.GitCommandError as e:
+                status = "Error while Pushing Repo:\n{}".format(e)
+            index += 1
+            """
+            if not status:
+                if self.emojis:
+                    icon = "✔️ "
+                else:
+                    icon = "OK"
+                message="Already up to date"
+            elif "No remote set up" in status or "Error while Pushing Repo" in status:
+                if self.emojis:
+                    icon = "❌ "
+                else:
+                    icon = "ERR"
+                message = "{}".format(status)
+            else:
+                if self.emojis:
+                    icon = "📤 "
+                else:
+                    icon = "PULL"
+                message="Pushing Repo"
+            status = "[{done:02d}/{all:02d}] {repo} {icon} -> {message}".format(
+                done=index,
+                all=len(self.directories),
+                icon=icon,
+                repo=folder,
+                message=message
             )
-            status = call(["git", "push"], cwd=os.path.join(self.base_dir, folder))
-            if status != 0:
-                self.log.error("Error while pushing. Please check console output")
-                errors += 1
-        if errors != 0:
+            """
+            self.log.info("%s", status.strip())
+        if errors > 0:
             self.log.warning("Encountered %d errors while performing task", errors)
         self.log.info(
             "Pushed [%d/%d] Repositories in the Folder",
