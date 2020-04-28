@@ -19,6 +19,7 @@ name | description | default
 --- | --- | ---
 self | The parent class | 
 directory | The directory in which to search for git repositories | "./"
+emojis | If you want to enable emojis in the console output or not | True
 
 
 
