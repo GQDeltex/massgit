@@ -19,8 +19,9 @@ class UpdateGit(object):
         Initializes the Class and sets up some basic Variables
 
 
-        @param self The parent class
-        @param directory The directory in which to search for git repositories
+        @param self         The parent class
+        @param directory    The directory in which to search for git repositories
+        @param emojis       If you want to enable emojis in the console output or not
         """
         # Get the Specified Folder and resolve ~ Paths
         self.base_dir = os.path.abspath(os.path.expanduser(directory))
@@ -129,7 +130,8 @@ class UpdateGit(object):
                     origin = repo.remote(repo.remotes[0])
                     if str(repo.active_branch) in origin.refs:
                         self.log.info("Setting up remote tracking branch")
-                        repo.heads[str(repo.active_branch)].set_tracking_branch(origin.refs[str(repo.active_branch)])
+                        active_branch = str(repo.active_branch)
+                        repo.heads[active_branch].set_tracking_branch(origin.refs[active_branch])
                         try:
                             status = repo.git.pull()
                         except git.exc.GitCommandError as error:
@@ -206,7 +208,8 @@ class UpdateGit(object):
                     origin = repo.remote(repo.remotes[0])
                     if str(repo.active_branch) in origin.refs:
                         self.log.info("Setting up remote tracking branch")
-                        repo.heads[str(repo.active_branch)].set_tracking_branch(origin.refs[str(repo.active_branch)])
+                        active_branch = str(repo.active_branch)
+                        repo.heads[active_branch].set_tracking_branch(origin.refs[active_branch])
                         try:
                             status = repo.git.push()
                         except git.exc.GitCommandError as error:
