@@ -127,9 +127,7 @@ name | description | default
 --- | --- | ---
 self | The parent class | 
 done | (int) Current index in the list | 
-total | (int) Total number of Repos | 
-repo | (str) Name of current Repo | 
-branch | (str) Name of current Branch | 
+repo | (str) Current Repo Object | 
 icon | (str) Icon to display (Emoji/Text) | 
 message | (str) message to display for more information | 
 
