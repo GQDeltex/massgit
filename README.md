@@ -9,7 +9,13 @@ I wrote it because I have a folder in my home directory containing all of my git
 Make sure the python file is executable
 
 ```bash
-sudo chmod +x /path/to/massgit/massgit.py
+sudo chmod +x massgit.py
+```
+
+and you have all of the [requirements](/requirement.txt) installed
+
+```bash
+pip install -r requirement.txt
 ```
 
 The Script uses the Folder it is executed in as the root folder to search for git repos or the folder you specify as an argument.
@@ -32,7 +38,7 @@ optional arguments:
   --update, -u  Update (Pull then Push) all Repositories
 ```
 
-For more information regarding the used Modules, refer to the [Documentation](/docs/)
+For more information regarding the used Modules, refer to the [Documentation](/docs/README.md)
 
 ## Tips & Tricks
 
