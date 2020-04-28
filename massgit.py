@@ -74,30 +74,20 @@ class UpdateGit(object):
             index += 1
             if not status:
                 errors += 1
-            branch = status.split("\n")[0].replace("On branch ", "").strip()
             if "nothing to commit, working tree clean" in status:
-                if self.emojis:
-                    icon = "✔️ "
-                else:
-                    icon = "OK"
+                icon = self.icon("success")
                 message = "Everything up to date"
             else:
                 if status:
                     errors += 1
-                if self.emojis:
-                    icon = "❌ "
-                else:
-                    icon = "ERR"
+                icon = self.icon("error")
                 message = "\n{}".format(status)
-            status = "[{done:02d}/{all:02d}] {repo}:{branch} {icon} -> {message}".format(
+            self.log_status(
                 done=index,
-                all=len(self.directories),
                 icon=icon,
-                repo=folder,
-                branch=branch,
+                repo=repo,
                 message=message
             )
-            self.log.info("%s", status.strip())
         if errors > 0:
             self.log.warning("Encountered %d errors while performing task", errors)
         self.log.info(
@@ -120,62 +110,36 @@ class UpdateGit(object):
         self.log.info("Pulling Repositories")
         for folder in self.directories:
             repo = self.directories[folder]
-            if repo.remotes:
-                if repo.heads[str(repo.active_branch)].tracking_branch():
-                    try:
-                        status = repo.git.pull()
-                    except git.exc.GitCommandError as error:
-                        status = "Error while Pulling Repo:\n{}".format(error)
-                else:
-                    origin = repo.remote(repo.remotes[0])
-                    if str(repo.active_branch) in origin.refs:
-                        self.log.info("Setting up remote tracking branch")
-                        active_branch = str(repo.active_branch)
-                        repo.heads[active_branch].set_tracking_branch(origin.refs[active_branch])
-                        try:
-                            status = repo.git.pull()
-                        except git.exc.GitCommandError as error:
-                            status = "Error while Pulling Repo:\n{}".format(error)
-                    else:
-                        status = "No upstream branch"
+            if self.has_remote_tracking(repo):
+                try:
+                    status = repo.git.push()
+                except git.exc.GitCommandError as error:
+                    status = "Error while Pulling Repo:\n{}".format(error)
             else:
-                status = "No remote set up"
+                status = "No tracking possible, maybe no remote or no remote branch"
             index += 1
             if not status:
                 errors += 1
                 status = "Got no status"
             if "Already up to date." in status:
-                if self.emojis:
-                    icon = "✔️ "
-                else:
-                    icon = "OK"
+                icon = self.icon("success")
                 message = "Already up to date"
             elif (
-                    ("No remote set up" in status) or
-                    ("Error while Pulling Repo" in status) or
-                    ("Got no status" in status) or
-                    ("No upstream branch")
+                    ("No tracking possible, maybe no remote or no remote branch" in status) or
+                    ("Error while Pulling Repo:" in status) or
+                    ("Got no status" in status)
                 ):
-                if self.emojis:
-                    icon = "❌ "
-                else:
-                    icon = "ERR"
+                icon = self.icon("error")
                 message = "{}".format(status)
             else:
-                if self.emojis:
-                    icon = "📥 "
-                else:
-                    icon = "PULL"
+                icon = self.icon("download")
                 message = "Pulling Repo"
-            status = "[{done:02d}/{all:02d}] {repo}:{branch} {icon} -> {message}".format(
+            self.log_status(
                 done=index,
-                all=len(self.directories),
                 icon=icon,
-                repo=folder,
-                branch=str(repo.active_branch),
+                repo=repo,
                 message=message
             )
-            self.log.info("%s", status.strip())
         if errors > 0:
             self.log.warning("Encountered %d errors while performing task", errors)
         self.log.info(
@@ -198,48 +162,26 @@ class UpdateGit(object):
         self.log.info("Pushing Repositories")
         for folder in self.directories:
             repo = self.directories[folder]
-            if repo.remotes:
-                if repo.heads[str(repo.active_branch)].tracking_branch():
-                    try:
-                        status = repo.git.push()
-                    except git.exc.GitCommandError as error:
-                        status = "Error while Pulling Repo:\n{}".format(error)
-                else:
-                    origin = repo.remote(repo.remotes[0])
-                    if str(repo.active_branch) in origin.refs:
-                        self.log.info("Setting up remote tracking branch")
-                        active_branch = str(repo.active_branch)
-                        repo.heads[active_branch].set_tracking_branch(origin.refs[active_branch])
-                        try:
-                            status = repo.git.push()
-                        except git.exc.GitCommandError as error:
-                            status = "Error while Pulling Repo:\n{}".format(error)
-                    else:
-                        status = "No upstream branch"
+            if self.has_remote_tracking(repo):
+                try:
+                    status = repo.git.push()
+                except git.exc.GitCommandError as error:
+                    status = "Error while Pulling Repo:\n{}".format(error)
             else:
-                status = "No remote set up"
+                status = "No tracking possible, maybe no remote or no remote branch"
             index += 1
             if not status:
-                if self.emojis:
-                    icon = "📤 "
-                else:
-                    icon = "OK"
+                icon = self.icon("upload")
                 message = "Up to date"
             else:
-                if self.emojis:
-                    icon = "❌ "
-                else:
-                    icon = "ERR"
+                icon = self.icon("error")
                 message = "{}".format(status)
-            status = "[{done:02d}/{all:02d}] {repo}:{branch} {icon} -> {message}".format(
+            self.log_status(
                 done=index,
-                all=len(self.directories),
                 icon=icon,
-                repo=folder,
-                branch=str(repo.active_branch),
+                repo=repo,
                 message=message
             )
-            self.log.info("%s", status.strip())
         if errors > 0:
             self.log.warning("Encountered %d errors while performing task", errors)
         self.log.info(
@@ -257,6 +199,85 @@ class UpdateGit(object):
         self.log.info("Updating all Repositories")
         self.pull()
         self.push()
+
+    def has_remote_tracking(self, repo):
+        """
+        Creates tracking information for active branch
+        if branch with the same name exists on the remote
+
+        @param self The parent class
+        @param repo The repo object to perform the action on
+        @return If tracking information is available
+        """
+        active_branch = str(repo.active_branch)
+        active_head = repo.heads[active_branch]
+        if repo.remotes:
+            # Has a registered Remote
+            if active_head.tracking_branch():
+                # Already has remote tracking
+                return True
+            else:
+                # Try to set up remote tracking
+                # Select First remote (defaults to origin)
+                origin = repo.remote(repo.remotes[0])
+                if active_branch in origin.refs:
+                    # If branch with the same name exists on the remote, set up tracking
+                    self.log.info("Setting up remote tracking branch")
+                    active_head.set_tracking_branch(origin.refs[active_branch])
+                    return True
+                # If no branch with the same name exists on the remote, no tracking
+                return False
+        else:
+            # Does not have a remote, thus no tracking information
+            return False
+
+    def log_status(self, done, repo, icon, message):
+        """
+        Print status messages with progress, repo, branch, icon and message
+
+        @param self The parent class
+        @param done (int) Current index in the list
+        @param total (int) Total number of Repos
+        @param repo (str) Name of current Repo
+        @param branch (str) Name of current Branch
+        @param icon (str) Icon to display (Emoji/Text)
+        @param message (str) message to display for more information
+        """
+        repo_name = repo.working_dir.split("/")[-1]
+        branch = repo.active_branch
+        status = "[{done:02d}/{total:02d}] {repo}:{branch} {icon} -> {message}".format(
+            done=int(done),
+            total=int(len(self.directories)),
+            icon=str(icon),
+            repo=str(repo_name),
+            branch=str(branch),
+            message=str(message)
+        )
+        self.log.info("%s", status.strip())
+
+    def icon(self, name):
+        """
+        Matches either Icon or Text to icon name
+
+        @param self The parent class
+        @param name The name of the Icon
+        @return (str) Icon
+        """
+        emoji = {
+            "success": "✔️ ",
+            "error": "❌ ",
+            "upload": "📤 ",
+            "download": "📥 ",
+        }
+        text_sub = {
+            "success": "OK",
+            "error": "ERR",
+            "upload": "UP",
+            "download": "DWN"
+        }
+        if self.emojis:
+            return emoji[name]
+        return text_sub[name]
 
 if __name__ == '__main__':
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
