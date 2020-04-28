@@ -238,9 +238,7 @@ class UpdateGit(object):
 
         @param self The parent class
         @param done (int) Current index in the list
-        @param total (int) Total number of Repos
-        @param repo (str) Name of current Repo
-        @param branch (str) Name of current Branch
+        @param repo (str) Current Repo Object
         @param icon (str) Icon to display (Emoji/Text)
         @param message (str) message to display for more information
         """
