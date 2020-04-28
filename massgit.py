@@ -19,8 +19,9 @@ class UpdateGit(object):
         Initializes the Class and sets up some basic Variables
 
 
-        @param self The parent class
-        @param directory The directory in which to search for git repositories
+        @param self         The parent class
+        @param directory    The directory in which to search for git repositories
+        @param emojis       If you want to enable emojis in the console output or not 
         """
         # Get the Specified Folder and resolve ~ Paths
         self.base_dir = os.path.abspath(os.path.expanduser(directory))
