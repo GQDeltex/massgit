@@ -322,11 +322,12 @@ if __name__ == '__main__':
        not PARSED_DATA.push and \
        not PARSED_DATA.update:
         UPDATER.status()
+    
     if PARSED_DATA.status:
         UPDATER.status()
-    if PARSED_DATA.pull:
-        UPDATER.pull()
-    if PARSED_DATA.push:
-        UPDATER.push()
     if PARSED_DATA.update:
         UPDATER.update()
+    if PARSED_DATA.pull and not PARSED_DATA.update:
+        UPDATER.pull()
+    if PARSED_DATA.push and not PARSED_DATA.update:
+        UPDATER.push()
