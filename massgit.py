@@ -112,7 +112,7 @@ class UpdateGit(object):
             repo = self.directories[folder]
             if self.has_remote_tracking(repo):
                 try:
-                    status = repo.git.push()
+                    status = repo.git.pull()
                 except git.exc.GitCommandError as error:
                     status = "Error while Pulling Repo:\n{}".format(error)
             else:
@@ -121,6 +121,7 @@ class UpdateGit(object):
             if not status:
                 errors += 1
                 status = "Got no status"
+            # Match icons to status messages
             if "Already up to date." in status:
                 icon = self.icon("success")
                 message = "Already up to date"
