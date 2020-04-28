@@ -73,15 +73,16 @@ class UpdateGit(object):
             index += 1
             if not status:
                 errors += 1
-                continue
             branch = status.split("\n")[0].replace("On branch ", "").strip()
-            if "Your branch is up to date with" in status:
+            if "nothing to commit, working tree clean" in status:
                 if self.emojis:
                     icon = "✔️ "
                 else:
                     icon = "OK"
-                message="Everything up to date"
+                message = "Everything up to date"
             else:
+                if status:
+                    errors += 1
                 if self.emojis:
                     icon = "❌ "
                 else:
@@ -99,7 +100,7 @@ class UpdateGit(object):
         if errors > 0:
             self.log.warning("Encountered %d errors while performing task", errors)
         self.log.info(
-            "Checked [%d/%d] Repositories",
+            "%d of %d Repositories up to date",
             len(self.directories)-errors,
             len(self.directories)
         )
@@ -118,26 +119,41 @@ class UpdateGit(object):
         self.log.info("Pulling Repositories")
         for folder in self.directories:
             repo = self.directories[folder]
-            try:
-                if repo.remotes:
-                    status = repo.git.pull()
+            if repo.remotes:
+                if repo.heads[str(repo.active_branch)].tracking_branch():
+                    try:
+                        status = repo.git.pull()
+                    except git.exc.GitCommandError as error:
+                        status = "Error while Pulling Repo:\n{}".format(error)
                 else:
-                    self.log.warning("No remote set up")
-                    status = "No remote set up"
-            except git.exc.GitCommandError as e:
-                self.log.error("Error while Pulling Repo:\n%s", e)
-                status = "Error while Pulling Repo:\n{}".format(e)
+                    origin = repo.remote(repo.remotes[0])
+                    if str(repo.active_branch) in origin.refs:
+                        self.log.info("Setting up remote tracking branch")
+                        repo.heads[str(repo.active_branch)].set_tracking_branch(origin.refs[str(repo.active_branch)])
+                        try:
+                            status = repo.git.pull()
+                        except git.exc.GitCommandError as error:
+                            status = "Error while Pulling Repo:\n{}".format(error)
+                    else:
+                        status = "No upstream branch"
+            else:
+                status = "No remote set up"
             index += 1
             if not status:
                 errors += 1
-                continue
+                status = "Got no status"
             if "Already up to date." in status:
                 if self.emojis:
                     icon = "✔️ "
                 else:
                     icon = "OK"
-                message="Already up to date"
-            elif "No remote set up" in status or "Error while Pulling Repo" in status:
+                message = "Already up to date"
+            elif (
+                    ("No remote set up" in status) or
+                    ("Error while Pulling Repo" in status) or
+                    ("Got no status" in status) or
+                    ("No upstream branch")
+                ):
                 if self.emojis:
                     icon = "❌ "
                 else:
@@ -148,19 +164,20 @@ class UpdateGit(object):
                     icon = "📥 "
                 else:
                     icon = "PULL"
-                message="Pulling Repo"
-            status = "[{done:02d}/{all:02d}] {repo} {icon} -> {message}".format(
+                message = "Pulling Repo"
+            status = "[{done:02d}/{all:02d}] {repo}:{branch} {icon} -> {message}".format(
                 done=index,
                 all=len(self.directories),
                 icon=icon,
                 repo=folder,
+                branch=str(repo.active_branch),
                 message=message
             )
             self.log.info("%s", status.strip())
         if errors > 0:
             self.log.warning("Encountered %d errors while performing task", errors)
         self.log.info(
-            "Pulled [%d/%d] Repositories in the Folder",
+            "Pulled %d of %d Repositories in the Folder",
             len(self.directories)-errors,
             len(self.directories)
         )
@@ -179,38 +196,51 @@ class UpdateGit(object):
         self.log.info("Pushing Repositories")
         for folder in self.directories:
             repo = self.directories[folder]
-            try:
-                if repo.remotes:
-                    status = repo.git.push()
+            if repo.remotes:
+                if repo.heads[str(repo.active_branch)].tracking_branch():
+                    try:
+                        status = repo.git.push()
+                    except git.exc.GitCommandError as error:
+                        status = "Error while Pulling Repo:\n{}".format(error)
                 else:
-                    status = "No remote set up"
-            except git.exc.GitCommandError as e:
-                status = "Error while Pushing Repo:\n{}".format(e)
+                    origin = repo.remote(repo.remotes[0])
+                    if str(repo.active_branch) in origin.refs:
+                        self.log.info("Setting up remote tracking branch")
+                        repo.heads[str(repo.active_branch)].set_tracking_branch(origin.refs[str(repo.active_branch)])
+                        try:
+                            status = repo.git.push()
+                        except git.exc.GitCommandError as error:
+                            status = "Error while Pulling Repo:\n{}".format(error)
+                    else:
+                        status = "No upstream branch"
+            else:
+                status = "No remote set up"
             index += 1
             if not status:
                 if self.emojis:
                     icon = "📤 "
                 else:
                     icon = "OK"
-                message="Up to date"
+                message = "Up to date"
             else:
                 if self.emojis:
                     icon = "❌ "
                 else:
                     icon = "ERR"
                 message = "{}".format(status)
-            status = "[{done:02d}/{all:02d}] {repo} {icon} -> {message}".format(
+            status = "[{done:02d}/{all:02d}] {repo}:{branch} {icon} -> {message}".format(
                 done=index,
                 all=len(self.directories),
                 icon=icon,
                 repo=folder,
+                branch=str(repo.active_branch),
                 message=message
             )
             self.log.info("%s", status.strip())
         if errors > 0:
             self.log.warning("Encountered %d errors while performing task", errors)
         self.log.info(
-            "Pushed [%d/%d] Repositories in the Folder",
+            "Pushed %d of %d Repositories in the Folder",
             len(self.directories)-errors,
             len(self.directories)
         )
